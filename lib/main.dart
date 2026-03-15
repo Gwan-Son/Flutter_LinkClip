@@ -1,63 +1,47 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'data/isar_database.dart';
 
-void main() {
-  runApp(const MyApp());
+final databaseProvider = Provider<IsarDatabase>((ref) {
+  throw UnimplementedError('databaseProvider는 main에서 override 되어야 합니다.');
+});
+
+void main() async {
+  // Flutter 엔진과 프레임워크가 연결되었는지 확인
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // DB 인스턴스 생성 및 초기화
+  final isarDatabase = IsarDatabase();
+  await isarDatabase.initialize();
+
+  runApp(
+    // Riverpod을 사용하기 위해 앱 최상단을 ProviderScope로 감싸줌
+    ProviderScope(
+      overrides: [
+        // 미리 초기화해둔 DB 인스턴스 주입
+        databaseProvider.overrideWithValue(isarDatabase),
+      ],
+      child: const LinkClipApp(),
+    ),
+  );
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class LinkClipApp extends StatelessWidget {
+  const LinkClipApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: "LinkClip Clone",
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(widget.title)),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
+      // 테스트
+      home: const Scaffold(
+        body: Center(
+          child: Text('LinkClip 클론 시작!'),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
       ),
     );
   }
