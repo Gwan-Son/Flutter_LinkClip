@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'data/isar_database.dart';
+import 'presentation/screens/home_screen.dart';
 
 final databaseProvider = Provider<IsarDatabase>((ref) {
   throw UnimplementedError('databaseProvider는 main에서 override 되어야 합니다.');
@@ -37,12 +38,8 @@ class LinkClipApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      // 테스트
-      home: const Scaffold(
-        body: Center(
-          child: Text('LinkClip 클론 시작!'),
-        ),
-      ),
+      // 메인 화면 연결
+      home: const HomeScreen(),
     );
   }
 }
