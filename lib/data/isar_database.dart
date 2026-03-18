@@ -38,4 +38,18 @@ class IsarDatabase {
       await newLink.category.save();
     });
   }
+
+  // 모든 링크 불러오기
+  Future<List<LinkItem>> getAllLinks() async {
+    return await isar.linkItems.where().findAll();
+  }
+
+  // 특정 카테고리에 속한 링크들만 불러오기
+  Future<List<LinkItem>> getLinksByCategory(Category category) async {
+    // 카테고리에 연결된 링크 데이터를 메모리로 로드
+    await category.links.load();
+
+    // 로드된 링크들을 List 형태로 반환
+    return category.links.toList();
+  }
 }

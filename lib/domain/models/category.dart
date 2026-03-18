@@ -1,4 +1,5 @@
 import 'package:isar/isar.dart';
+import 'link_item.dart';
 
 part 'category.g.dart';
 
@@ -17,4 +18,7 @@ class Category {
     required this.name,
     required this.colorValue,
   });
+
+  @Backlink(to: 'category')
+  final links = IsarLinks<LinkItem>();
 }
