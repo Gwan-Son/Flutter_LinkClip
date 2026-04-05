@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_sficon/flutter_sficon.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../domain/models/link_item.dart';
 
 class LinkCardView extends StatelessWidget {
@@ -9,63 +12,72 @@ class LinkCardView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 1. 썸네일 이미지 영역
-          AspectRatio(
-            aspectRatio: 16 / 9,
-            child: _buildThumbnail(),
-          ),
-
-          // 2. 하단 텍스트 정보 영역
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 링크 제목
-                Text(
-                  link.title ?? '제목 없음',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis, // ... 처리
+    return CupertinoButton(
+      padding: EdgeInsets.zero,
+      pressedOpacity: 0.5,
+      onPressed: () {
+        try {
+          final uri = Uri.parse(link.url);
+          launchUrl(uri, mode: LaunchMode.externalApplication);
+        } catch (e) {
+          print('URL 열기 실패: $e');
+        }
+      },
+      child: Card(
+        color: Colors.white,
+        clipBehavior: Clip.antiAlias,
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 1. 썸네일 이미지 영역
+            Padding(
+              padding: const EdgeInsets.only(
+                left: 6,
+                right: 6,
+                top: 8,
+                bottom: 6,
+              ),
+              child: Card(
+                clipBehavior: Clip.antiAlias,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadiusGeometry.circular(8),
                 ),
-                const SizedBox(height: 4),
-                // 사용자가 남긴 메모
-                if (link.memo != null && link.memo!.isNotEmpty) ...[
-                  Text(
-                    link.memo!,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade700,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                ],
-
-                // 원본 URL 주소
-                Text(
-                  link.url,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.blue.shade300,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                child: AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: _buildThumbnail(),
                 ),
-              ],
+              ),
             ),
-          ),
-        ],
+
+            // 2. 하단 텍스트 정보 영역
+            Padding(
+              padding: const EdgeInsets.only(
+                left: 12,
+                right: 12,
+                bottom: 8,
+                top: 6,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 링크 제목
+                  Text(
+                    link.title ?? '제목 없음',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis, // ... 처리
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -76,7 +88,7 @@ class LinkCardView extends StatelessWidget {
     if (link.imageUrl == null || link.imageUrl!.isEmpty) {
       return Container(
         color: Colors.grey.shade200,
-        child: const Icon(Icons.link, size: 40, color: Colors.grey),
+        child: const Icon(SFIcons.sf_link, size: 20, color: Colors.grey),
       );
     }
 
