@@ -27,6 +27,17 @@ class LinkItem {
 
   DateTime createdAt = DateTime.now();
 
+  String get relativeTime {
+    final now = DateTime.now();
+    final difference = now.difference(createdAt);
+    if (difference.inDays >= 365) return '${difference.inDays ~/ 365}년 전';
+    if (difference.inDays >= 30) return '${difference.inDays ~/ 30}개월 전';
+    if (difference.inDays > 0) return '${difference.inDays}일 전';
+    if (difference.inHours > 0) return '${difference.inHours}시간 전';
+    if (difference.inMinutes > 0) return '${difference.inMinutes}분 전';
+    return '방금 전';
+  }
+
   final category = IsarLink<Category>();
 
   LinkItem({

@@ -27,8 +27,13 @@ const CategorySchema = CollectionSchema(
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
-    r'name': PropertySchema(
+    r'iconIndex': PropertySchema(
       id: 2,
+      name: r'iconIndex',
+      type: IsarType.long,
+    ),
+    r'name': PropertySchema(
+      id: 3,
       name: r'name',
       type: IsarType.string,
     )
@@ -87,7 +92,8 @@ void _categorySerialize(
 ) {
   writer.writeLong(offsets[0], object.colorValue);
   writer.writeDateTime(offsets[1], object.createdAt);
-  writer.writeString(offsets[2], object.name);
+  writer.writeLong(offsets[2], object.iconIndex);
+  writer.writeString(offsets[3], object.name);
 }
 
 Category _categoryDeserialize(
@@ -98,7 +104,8 @@ Category _categoryDeserialize(
 ) {
   final object = Category(
     colorValue: reader.readLong(offsets[0]),
-    name: reader.readString(offsets[2]),
+    iconIndex: reader.readLongOrNull(offsets[2]),
+    name: reader.readString(offsets[3]),
   );
   object.createdAt = reader.readDateTime(offsets[1]);
   object.id = id;
@@ -117,6 +124,8 @@ P _categoryDeserializeProp<P>(
     case 1:
       return (reader.readDateTime(offset)) as P;
     case 2:
+      return (reader.readLongOrNull(offset)) as P;
+    case 3:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -417,6 +426,75 @@ extension CategoryQueryFilter
     });
   }
 
+  QueryBuilder<Category, Category, QAfterFilterCondition> iconIndexIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'iconIndex',
+      ));
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition> iconIndexIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'iconIndex',
+      ));
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition> iconIndexEqualTo(
+      int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'iconIndex',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition> iconIndexGreaterThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'iconIndex',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition> iconIndexLessThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'iconIndex',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition> iconIndexBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'iconIndex',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
   QueryBuilder<Category, Category, QAfterFilterCondition> idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -688,6 +766,18 @@ extension CategoryQuerySortBy on QueryBuilder<Category, Category, QSortBy> {
     });
   }
 
+  QueryBuilder<Category, Category, QAfterSortBy> sortByIconIndex() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'iconIndex', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterSortBy> sortByIconIndexDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'iconIndex', Sort.desc);
+    });
+  }
+
   QueryBuilder<Category, Category, QAfterSortBy> sortByName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.asc);
@@ -724,6 +814,18 @@ extension CategoryQuerySortThenBy
   QueryBuilder<Category, Category, QAfterSortBy> thenByCreatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterSortBy> thenByIconIndex() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'iconIndex', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterSortBy> thenByIconIndexDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'iconIndex', Sort.desc);
     });
   }
 
@@ -766,6 +868,12 @@ extension CategoryQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Category, Category, QDistinct> distinctByIconIndex() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'iconIndex');
+    });
+  }
+
   QueryBuilder<Category, Category, QDistinct> distinctByName(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -791,6 +899,12 @@ extension CategoryQueryProperty
   QueryBuilder<Category, DateTime, QQueryOperations> createdAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'createdAt');
+    });
+  }
+
+  QueryBuilder<Category, int?, QQueryOperations> iconIndexProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'iconIndex');
     });
   }
 

@@ -22,16 +22,29 @@ class CategoryNotifier extends Notifier<List<Category>> {
   }
 
   // 2. 카테고리 추가 기능
-  Future<void> addCategory(String name, int colorValue) async {
+  Future<void> addCategory(String name, int colorValue, {int? iconIndex}) async {
     final db = ref.read(databaseProvider);
 
-    final newCategory = Category(name: name, colorValue: colorValue);
+    final newCategory = Category(name: name, colorValue: colorValue, iconIndex: iconIndex);
     await db.saveCategory(newCategory);
 
     _loadCategories();
   }
 
-  // TODO:- 카테고리 삭제 로직 추가 예정
+  // 카테고리 삭제 기능
+  Future<void> deleteCategory(int id) async {
+    final db = ref.read(databaseProvider);
+    await db.deleteCategory(id);
+    _loadCategories();
+  }
+
+  // 카테고리 수정 기능
+  Future<void> updateCategory(int id, String newName, int newColorValue, {int? iconIndex}) async {
+    final db = ref.read(databaseProvider);
+    final category = Category(name: newName, colorValue: newColorValue, iconIndex: iconIndex)..id = id;
+    await db.saveCategory(category);
+    _loadCategories();
+  }
 }
 
 // 3. UI에서 사용할 수 있도록 NotifierProvider로 감싸서 노출.

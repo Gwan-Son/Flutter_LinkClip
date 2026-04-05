@@ -12,11 +12,14 @@ class Category {
   @Index()
   int colorValue;
 
+  int? iconIndex; // 선택된 아이콘의 인덱스 저장
+
   DateTime createdAt = DateTime.now();
 
   Category({
     required this.name,
     required this.colorValue,
+    this.iconIndex,
   });
 
   @Backlink(to: 'category')

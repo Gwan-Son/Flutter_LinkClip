@@ -28,20 +28,37 @@ class IsarDatabase {
     return await isar.categorys.where().findAll();
   }
 
+  // 특정 카테고리 삭제
+  Future<void> deleteCategory(int id) async {
+    await isar.writeTxn(() async {
+      await isar.categorys.delete(id);
+    });
+  }
+
   // 새로운 링크 저장
-  Future<void> saveLink(LinkItem newLink, {required Category category}) async {
+  Future<void> saveLink(LinkItem newLink, {Category? category}) async {
     await isar.writeTxn(() async {
       // 링크 원본 저장
       await isar.linkItems.put(newLink);
-      // 링크와 카테고리 사이의 관계 맺어주기 및 저장
-      newLink.category.value = category;
-      await newLink.category.save();
+      // 카테고리가 선택된 경우에만 관계를 맺어줌
+      if (category != null) {
+        newLink.category.value = category;
+        await newLink.category.save();
+      }
+    });
+  }
+
+  // 특정 링크 삭제
+  Future<void> deleteLink(int id) async {
+    await isar.writeTxn(() async {
+      await isar.linkItems.delete(id);
     });
   }
 
   // 모든 링크 불러오기
   Future<List<LinkItem>> getAllLinks() async {
-    return await isar.linkItems.where().findAll();
+    final links = await isar.linkItems.where().findAll();
+    return links.reversed.toList(); // 최신순(가장 나중에 저장된 순)으로 뒤집기
   }
 
   // 특정 카테고리에 속한 링크들만 불러오기
@@ -49,7 +66,7 @@ class IsarDatabase {
     // 카테고리에 연결된 링크 데이터를 메모리로 로드
     await category.links.load();
 
-    // 로드된 링크들을 List 형태로 반환
-    return category.links.toList();
+    // 로드된 링크들을 최신순으로 반환
+    return category.links.toList().reversed.toList();
   }
 }

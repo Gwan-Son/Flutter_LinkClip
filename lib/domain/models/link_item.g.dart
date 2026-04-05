@@ -42,13 +42,18 @@ const LinkItemSchema = CollectionSchema(
       name: r'memo',
       type: IsarType.string,
     ),
-    r'title': PropertySchema(
+    r'relativeTime': PropertySchema(
       id: 5,
+      name: r'relativeTime',
+      type: IsarType.string,
+    ),
+    r'title': PropertySchema(
+      id: 6,
       name: r'title',
       type: IsarType.string,
     ),
     r'url': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'url',
       type: IsarType.string,
     )
@@ -98,6 +103,7 @@ int _linkItemEstimateSize(
       bytesCount += 3 + value.length * 3;
     }
   }
+  bytesCount += 3 + object.relativeTime.length * 3;
   {
     final value = object.title;
     if (value != null) {
@@ -119,8 +125,9 @@ void _linkItemSerialize(
   writer.writeString(offsets[2], object.imageUrl);
   writer.writeBool(offsets[3], object.isPinned);
   writer.writeString(offsets[4], object.memo);
-  writer.writeString(offsets[5], object.title);
-  writer.writeString(offsets[6], object.url);
+  writer.writeString(offsets[5], object.relativeTime);
+  writer.writeString(offsets[6], object.title);
+  writer.writeString(offsets[7], object.url);
 }
 
 LinkItem _linkItemDeserialize(
@@ -134,8 +141,8 @@ LinkItem _linkItemDeserialize(
     imageUrl: reader.readStringOrNull(offsets[2]),
     isPinned: reader.readBoolOrNull(offsets[3]) ?? false,
     memo: reader.readStringOrNull(offsets[4]),
-    title: reader.readStringOrNull(offsets[5]),
-    url: reader.readString(offsets[6]),
+    title: reader.readStringOrNull(offsets[6]),
+    url: reader.readString(offsets[7]),
   );
   object.createdAt = reader.readDateTime(offsets[0]);
   object.id = id;
@@ -160,8 +167,10 @@ P _linkItemDeserializeProp<P>(
     case 4:
       return (reader.readStringOrNull(offset)) as P;
     case 5:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 6:
+      return (reader.readStringOrNull(offset)) as P;
+    case 7:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -814,6 +823,140 @@ extension LinkItemQueryFilter
     });
   }
 
+  QueryBuilder<LinkItem, LinkItem, QAfterFilterCondition> relativeTimeEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'relativeTime',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LinkItem, LinkItem, QAfterFilterCondition>
+      relativeTimeGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'relativeTime',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LinkItem, LinkItem, QAfterFilterCondition> relativeTimeLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'relativeTime',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LinkItem, LinkItem, QAfterFilterCondition> relativeTimeBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'relativeTime',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LinkItem, LinkItem, QAfterFilterCondition>
+      relativeTimeStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'relativeTime',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LinkItem, LinkItem, QAfterFilterCondition> relativeTimeEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'relativeTime',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LinkItem, LinkItem, QAfterFilterCondition> relativeTimeContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'relativeTime',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LinkItem, LinkItem, QAfterFilterCondition> relativeTimeMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'relativeTime',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<LinkItem, LinkItem, QAfterFilterCondition>
+      relativeTimeIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'relativeTime',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<LinkItem, LinkItem, QAfterFilterCondition>
+      relativeTimeIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'relativeTime',
+        value: '',
+      ));
+    });
+  }
+
   QueryBuilder<LinkItem, LinkItem, QAfterFilterCondition> titleIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -1171,6 +1314,18 @@ extension LinkItemQuerySortBy on QueryBuilder<LinkItem, LinkItem, QSortBy> {
     });
   }
 
+  QueryBuilder<LinkItem, LinkItem, QAfterSortBy> sortByRelativeTime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'relativeTime', Sort.asc);
+    });
+  }
+
+  QueryBuilder<LinkItem, LinkItem, QAfterSortBy> sortByRelativeTimeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'relativeTime', Sort.desc);
+    });
+  }
+
   QueryBuilder<LinkItem, LinkItem, QAfterSortBy> sortByTitle() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'title', Sort.asc);
@@ -1270,6 +1425,18 @@ extension LinkItemQuerySortThenBy
     });
   }
 
+  QueryBuilder<LinkItem, LinkItem, QAfterSortBy> thenByRelativeTime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'relativeTime', Sort.asc);
+    });
+  }
+
+  QueryBuilder<LinkItem, LinkItem, QAfterSortBy> thenByRelativeTimeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'relativeTime', Sort.desc);
+    });
+  }
+
   QueryBuilder<LinkItem, LinkItem, QAfterSortBy> thenByTitle() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'title', Sort.asc);
@@ -1330,6 +1497,13 @@ extension LinkItemQueryWhereDistinct
     });
   }
 
+  QueryBuilder<LinkItem, LinkItem, QDistinct> distinctByRelativeTime(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'relativeTime', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<LinkItem, LinkItem, QDistinct> distinctByTitle(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -1380,6 +1554,12 @@ extension LinkItemQueryProperty
   QueryBuilder<LinkItem, String?, QQueryOperations> memoProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'memo');
+    });
+  }
+
+  QueryBuilder<LinkItem, String, QQueryOperations> relativeTimeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'relativeTime');
     });
   }
 
