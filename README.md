@@ -11,6 +11,12 @@
 ---
 
 # 👀 미리 보기
+<div>
+  <img width=24.5% src="https://github.com/user-attachments/assets/26f1bc43-03fa-474b-aa0d-ab9c34330ac5" />
+  <img width=24.5% src="https://github.com/user-attachments/assets/80cde260-4ba3-469c-af7e-f1b2c391b01d" />
+  <img width=24.5% src="https://github.com/user-attachments/assets/7ce80a5d-7aec-48af-b233-47a296f27737" />
+  <img width=24.5% src="https://github.com/user-attachments/assets/e2e578db-3559-4446-a3b1-18ad451ff5de" />
+</div>
 
 # 📐 아키텍처 요약
 
