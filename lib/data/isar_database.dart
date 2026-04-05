@@ -69,4 +69,10 @@ class IsarDatabase {
     // 로드된 링크들을 최신순으로 반환
     return category.links.toList().reversed.toList();
   }
+  // 모든 링크 삭제
+  Future<void> clearAllLinks() async {
+    await isar.writeTxn(() async {
+      await isar.linkItems.clear();
+    });
+  }
 }

@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/metadata_fetcher.dart';
 import '../../domain/providers/category_provider.dart';
 import '../../domain/providers/link_provider.dart';
-import '../../domain/models/category.dart';
+import '../common/category_icons.dart';
+
+// LinkClip 앱 테마 색상 (ShareView.swift의 mainColor: #FFC277)
+const Color _mainColor = Color(0xFFFFC277);
+const Color _mainColorLight = Color(0x33FFC277); // 20% opacity
 
 class AddLinkScreen extends ConsumerStatefulWidget {
-  final String? initialUrl; // 공유 확장 등을 통해 진입했을 때 자동으로 채울 URL
+  final String? initialUrl;
 
   const AddLinkScreen({super.key, this.initialUrl});
 
@@ -16,16 +21,18 @@ class AddLinkScreen extends ConsumerStatefulWidget {
 }
 
 class _AddLinkScreenState extends ConsumerState<AddLinkScreen> {
-  late final TextEditingController _urlController;
+  late final TextEditingController _titleController;
   final TextEditingController _memoController = TextEditingController();
+
+  bool _isLoading = false;
+  LinkMetadata? _metadata;
+  final Set<int> _selectedCategoryIds = {};
 
   @override
   void initState() {
     super.initState();
-    // initialUrl이 있다면 기본값으로 넣고 시작, 없다면 빈 문자열
-    _urlController = TextEditingController(text: widget.initialUrl ?? '');
+    _titleController = TextEditingController();
 
-    // 만약 전달받은 URL이 있다면 앱 켜지자마자 바로 메타데이터 가져오기!
     if (widget.initialUrl != null && widget.initialUrl!.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _fetchMetadata();
@@ -33,170 +40,404 @@ class _AddLinkScreenState extends ConsumerState<AddLinkScreen> {
     }
   }
 
-  bool _isLoading = false;
-  LinkMetadata? _metadata; // URL로 가져온 데이터 껍데기
-  Category? _selectedCategory; // 저장할 타겟 카테고리
-
   @override
   void dispose() {
-    _urlController.dispose();
+    _titleController.dispose();
     _memoController.dispose();
     super.dispose();
   }
 
-  // URL로 메타데이터 긁어오기
   Future<void> _fetchMetadata() async {
-    final url = _urlController.text.trim();
+    final url = widget.initialUrl ?? '';
     if (url.isEmpty) return;
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     final metadata = await MetadataFetcher.fetch(url);
 
-    // 결과 저장 및 로딩 종료
     setState(() {
       _metadata = metadata;
       _isLoading = false;
+      // 제목이 비어있으면 메타데이터의 제목 또는 호스트로 채우기
+      if (_titleController.text.isEmpty) {
+        final host = Uri.tryParse(url)?.host ?? '';
+        _titleController.text = metadata.title ?? host;
+      }
     });
   }
 
-  // 실제 Isar DB에 링크 저장하기
   void _saveLink() {
-    if (_metadata == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('URL 파싱 데이터를 먼저 가져와주세요!')),
-      );
-      return;
-    }
+    final url = widget.initialUrl?.trim() ?? '';
+    if (url.isEmpty) return;
 
-    // Provider를 읽어서 데이터 저장
-    ref
-        .read(linkListProvider.notifier)
-        .addLink(
-          url: _urlController.text.trim(),
-          title: _metadata!.title,
-          description: _metadata!.description,
-          imageUrl: _metadata!.imageUrl,
+    final categories = ref.read(categoryProvider);
+    final selectedCategories = categories
+        .where((c) => _selectedCategoryIds.contains(c.id))
+        .toList();
+
+    ref.read(linkListProvider.notifier).addLink(
+          url: url,
+          title: _titleController.text.trim().isNotEmpty
+              ? _titleController.text.trim()
+              : (Uri.tryParse(url)?.host ?? '제목 없음'),
+          description: _metadata?.description,
+          imageUrl: _metadata?.imageUrl,
           memo: _memoController.text.trim(),
-          category: _selectedCategory,
+          category: selectedCategories.isNotEmpty ? selectedCategories.first : null,
         );
 
-    // 완료 후 이전 화면으로 돌아가기
-    Navigator.of(context).pop();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('URL 저장됨'),
+        content: const Text('URL이 성공적으로 저장되었습니다.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              Navigator.pop(context);
+            },
+            child: const Text('확인', style: TextStyle(color: _mainColor)),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    // 저장 가능한 카테고리 리스트 불러오기
     final categories = ref.watch(categoryProvider);
+    final urlString = widget.initialUrl ?? '';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('새 파도(링크) 추가')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // 1. URL 입력 및 불러오기 영역
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _urlController,
-                    decoration: const InputDecoration(
-                      labelText: 'URL 주소',
-                      hintText: 'https://example.com',
-                      border: OutlineInputBorder(),
+      backgroundColor: Colors.grey.shade50,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        // Large title style (navigationBarTitleDisplayMode: .large)
+        leading: TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text(
+            '취소',
+            style: TextStyle(fontSize: 16, color: Colors.grey),
+          ),
+        ),
+        leadingWidth: 70,
+        title: const Text(
+          'URL 저장',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+        ),
+        centerTitle: true,
+        actions: [
+          TextButton.icon(
+            onPressed: urlString.isNotEmpty ? _saveLink : null,
+            icon: Icon(
+              CupertinoIcons.checkmark_alt,
+              size: 16,
+              color: urlString.isNotEmpty ? _mainColor : Colors.grey,
+            ),
+            label: Text(
+              '저장',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: urlString.isNotEmpty ? _mainColor : Colors.grey,
+              ),
+            ),
+          ),
+        ],
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: _mainColor))
+          : SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ── 1. 제목 섹션 ──────────────────────────────
+                  _SectionHeader(
+                    icon: CupertinoIcons.pencil,
+                    title: '제목',
+                  ),
+                  const SizedBox(height: 12),
+                  _StyledTextField(
+                    controller: _titleController,
+                    hintText: 'URL 제목을 입력하세요',
+                  ),
+                  const SizedBox(height: 28),
+
+                  // ── 2. 카테고리 섹션 ──────────────────────────
+                  Row(
+                    children: [
+                      const Icon(CupertinoIcons.tag, color: _mainColor, size: 18),
+                      const SizedBox(width: 8),
+                      const Text(
+                        '카테고리',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '(여러 개 선택 가능)',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  categories.isEmpty
+                      ? Center(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 20),
+                            child: Text(
+                              '등록된 카테고리가 없습니다',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey.shade500,
+                              ),
+                            ),
+                          ),
+                        )
+                      : Wrap(
+                          spacing: 12,
+                          runSpacing: 12,
+                          children: categories.map((category) {
+                            final isSelected =
+                                _selectedCategoryIds.contains(category.id);
+                            final color = Color(category.colorValue);
+                            return GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  if (isSelected) {
+                                    _selectedCategoryIds.remove(category.id);
+                                  } else {
+                                    _selectedCategoryIds.add(category.id);
+                                  }
+                                });
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 180),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 14, vertical: 9),
+                                decoration: BoxDecoration(
+                                  color: isSelected ? color : Colors.white,
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? color
+                                        : Colors.grey.shade300,
+                                    width: 1.5,
+                                  ),
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withAlpha(13),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      CategoryIcons.icons[
+                                          category.iconIndex ?? 0],
+                                      size: 15,
+                                      color: isSelected ? Colors.white : color,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      category.name,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: isSelected
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                        color: isSelected
+                                            ? Colors.white
+                                            : Colors.grey.shade800,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                  const SizedBox(height: 28),
+
+                  // ── 3. 메모 섹션 ──────────────────────────────
+                  Row(
+                    children: [
+                      const Icon(CupertinoIcons.doc_text, color: _mainColor, size: 18),
+                      const SizedBox(width: 8),
+                      const Text(
+                        '메모',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '(선택사항)',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  // TextEditor-style memo field with placeholder overlay
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: _mainColorLight, width: 1),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x0D000000),
+                          blurRadius: 4,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Stack(
+                      alignment: Alignment.topLeft,
+                      children: [
+                        if (_memoController.text.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 16),
+                            child: Text(
+                              '링크에 대한 메모를 남겨보세요',
+                              style: TextStyle(
+                                color: Color(0x80000000),
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        TextField(
+                          controller: _memoController,
+                          onChanged: (_) => setState(() {}),
+                          minLines: 4,
+                          maxLines: null,
+                          style: const TextStyle(fontSize: 16),
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.all(16),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: _isLoading ? null : _fetchMetadata, // 로딩 중엔 터치 막기
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 20),
+                  const SizedBox(height: 28),
+
+                  // ── 4. URL 정보 섹션 ──────────────────────────
+                  _SectionHeader(
+                    icon: CupertinoIcons.link,
+                    title: 'URL 정보',
                   ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('확인'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
+                  const SizedBox(height: 12),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: _mainColorLight, width: 1),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x0D000000),
+                          blurRadius: 4,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      urlString.isNotEmpty ? urlString : '—',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ),
 
-            // 2. 파싱된 미리보기 영역
-            if (_metadata != null) ...[
-              const Text(
-                '가져온 정보 미리보기',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                  const SizedBox(height: 40),
+                ],
               ),
-              const SizedBox(height: 8),
-              if (_metadata!.imageUrl != null)
-                Image.network(
-                  _metadata!.imageUrl!,
-                  height: 120,
-                  fit: BoxFit.cover,
-                ),
-              Text(
-                '제목: ${_metadata!.title ?? '없음'}',
-                style: const TextStyle(fontSize: 14),
-              ),
-              const SizedBox(height: 24),
-            ],
-
-            // 3. 메모 작성 영역
-            TextField(
-              controller: _memoController,
-              decoration: const InputDecoration(
-                labelText: '간단한 메모 (선택)',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 2,
             ),
-            const SizedBox(height: 24),
+    );
+  }
+}
 
-            // 4. 저장할 카테고리 선택 영역
-            DropdownButtonFormField<Category?>(
-              decoration: const InputDecoration(
-                labelText: '카테고리 (선택사항)',
-                border: OutlineInputBorder(),
-              ),
-              initialValue: _selectedCategory,
-              items: [
-                const DropdownMenuItem<Category?>(
-                  value: null,
-                  child: Text('카테고리 없음 (선택 안함)'),
-                ),
-                ...categories.map((cat) {
-                  return DropdownMenuItem<Category?>(
-                    value: cat,
-                    child: Text(cat.name),
-                  );
-                }),
-              ],
-              onChanged: (val) {
-                setState(() {
-                  _selectedCategory = val;
-                });
-              },
-            ),
-            const SizedBox(height: 32),
+// ── 공통 섹션 헤더 위젯 ─────────────────────────────
 
-            // 5. 완료/저장 버튼
-            FilledButton(
-              onPressed: _metadata != null ? _saveLink : null,
-              style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(54),
-              ),
-              child: const Text('링크 저장하기', style: TextStyle(fontSize: 16)),
-            ),
-          ],
+class _SectionHeader extends StatelessWidget {
+  final IconData icon;
+  final String title;
+
+  const _SectionHeader({required this.icon, required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, color: _mainColor, size: 18),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── 공통 스타일 텍스트 필드 ────────────────────────
+
+class _StyledTextField extends StatelessWidget {
+  final TextEditingController controller;
+  final String hintText;
+
+  const _StyledTextField({required this.controller, required this.hintText});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _mainColorLight, width: 1),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0D000000),
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: controller,
+        style: const TextStyle(fontSize: 16),
+        decoration: InputDecoration(
+          hintText: hintText,
+          hintStyle: const TextStyle(color: Color(0x80000000)),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.all(16),
         ),
       ),
     );

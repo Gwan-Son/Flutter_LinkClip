@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
-import 'package:linkclip_flutter/domain/models/link_item.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/providers/link_provider.dart';
-import '../../data/isar_database.dart';
-import '../../main.dart'; // To access databaseProvider
+import '../../main.dart'; // databaseProvider, linkListProvider
 
 class SettingScreen extends ConsumerStatefulWidget {
   const SettingScreen({super.key});
@@ -27,9 +25,7 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
 
   Future<void> _resetAllData() async {
     final db = ref.read(databaseProvider);
-    await db.isar.writeTxn(() async {
-      await db.isar.linkItems.clear();
-    });
+    await db.clearAllLinks();
     // Refresh links
     ref.read(linkListProvider.notifier).build();
 
