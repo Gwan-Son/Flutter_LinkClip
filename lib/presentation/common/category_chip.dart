@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import '../../domain/models/category.dart';
+import 'category_icons.dart';
 
 class CategoryChip extends StatelessWidget {
   final Category? category; // null이면 '전체 보기'를 의미합니다.
@@ -40,13 +42,27 @@ class CategoryChip extends StatelessWidget {
           borderRadius: BorderRadius.circular(20), // 둥근 캡슐 모양
         ),
         child: Center(
-          child: Text(
-            label,
-            style: TextStyle(
-              // 텍스트 색상도 배경색에 대비 되게 설정
-              color: isSelected ? Colors.white : Colors.grey.shade800,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (category != null)
+                Padding(
+                  padding: const EdgeInsets.only(right: 6.0),
+                  child: Icon(
+                    CategoryIcons.icons[category!.iconIndex ?? 0],
+                    size: 16,
+                    color: isSelected ? Colors.white : color,
+                  ),
+                ),
+              Text(
+                label,
+                style: TextStyle(
+                  // 텍스트 색상도 배경색에 대비 되게 설정
+                  color: isSelected ? Colors.white : Colors.grey.shade800,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+            ],
           ),
         ),
       ),
