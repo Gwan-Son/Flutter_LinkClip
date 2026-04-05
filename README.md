@@ -1,16 +1,19 @@
-# linkclip_flutter
+# LinkClip_flutter
 
-A new Flutter project.
+## 기존 LinkClip을 FLutter로 클론 코딩
 
-## Getting Started
+## 목차
+- [👀 미리 보기](#-미리-보기)
+- [📐 아키텍처 요약](#-아키텍처-요약)
+- [🔍 Native와 비교](#-Native와-비교)
+- [📁 파일 구조](#-파일-구조)
 
-This project is a starting point for a Flutter application.
+---
 
-A few resources to get you started if this is your first Flutter project:
+# 👀 미리 보기
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+# 📐 아키텍처 요약
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+# 🔍 Native와 비교
+
+# 📁 파일 구조
